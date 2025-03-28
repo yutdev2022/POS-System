@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout } from "@/components/layout/Layout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useStore, type Product } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,7 +99,7 @@ const Products = () => {
   };
   
   return (
-    <Layout>
+    <AuthLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Products</h1>
@@ -113,7 +113,7 @@ const Products = () => {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search products..."
+              placeholder="Searchproducts..."
               className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -285,7 +285,7 @@ const Products = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+    </AuthLayout>
   );
 };
 

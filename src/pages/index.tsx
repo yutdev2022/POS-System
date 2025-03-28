@@ -1,11 +1,11 @@
-import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/lib/store";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { DollarSign, Package, ShoppingCart, TrendingUp } from "lucide-react";
+import { DollarSign, Package, ShoppingCart, TrendingUp, User } from "lucide-react";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 
 const Dashboard = () => {
-  const { products, transactions } = useStore();
+  const { products, transactions, currentUser } = useStore();
   
   // Calculate total sales
   const totalSales = transactions.reduce((sum, transaction) => sum + transaction.totalAmount, 0);
@@ -30,9 +30,14 @@ const Dashboard = () => {
     .reverse();
   
   return (
-    <Layout>
+    <AuthLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <div className="text-sm text-muted-foreground">
+            Welcome back, <span className="font-medium text-foreground">{currentUser?.name}</span>
+          </div>
+        </div>
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -144,7 +149,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-    </Layout>
+    </AuthLayout>
   );
 };
 

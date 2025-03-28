@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout } from "@/components/layout/Layout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useStore, type Transaction } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,8 @@ const Transactions = () => {
   // Filter transactions based on search
   const filteredTransactions = transactions.filter(transaction => 
     transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transaction.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase())
+    transaction.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    transaction.cashierName.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   const handleViewTransaction = (transaction: Transaction) => {
@@ -26,7 +27,7 @@ const Transactions = () => {
   };
   
   return (
-    <Layout>
+    <AuthLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Transactions</h1>
@@ -50,6 +51,7 @@ const Transactions = () => {
               <TableRow>
                 <TableHead>Transaction ID</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Cashier</TableHead>
                 <TableHead>Payment Method</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -58,7 +60,7 @@ const Transactions = () => {
             <TableBody>
               {filteredTransactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No transactions found
                   </TableCell>
                 </TableRow>
@@ -67,6 +69,7 @@ const Transactions = () => {
                   <TableRow key={transaction.id}>
                     <TableCell className="font-medium">{transaction.id}</TableCell>
                     <TableCell>{format(new Date(transaction.timestamp), "MMM d, yyyy h:mm a")}</TableCell>
+                    <TableCell>{transaction.cashierName}</TableCell>
                     <TableCell className="capitalize">{transaction.paymentMethod}</TableCell>
                     <TableCell className="text-right">${transaction.totalAmount.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
@@ -108,6 +111,11 @@ const Transactions = () => {
                 </div>
                 
                 <div className="flex justify-between items-center pb-2 border-b">
+                  <span className="font-medium">Cashier</span>
+                  <span>{selectedTransaction.cashierName}</span>
+                </div>
+                
+                <div className="flex justify-between items-center pb-2 border-b">
                   <span className="font-medium">Payment Method</span>
                   <span className="capitalize">{selectedTransaction.paymentMethod}</span>
                 </div>
@@ -135,7 +143,7 @@ const Transactions = () => {
           )}
         </DialogContent>
       </Dialog>
-    </Layout>
+    </AuthLayout>
   );
 };
 

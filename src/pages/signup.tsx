@@ -1,191 +1,130 @@
-import type React from "react";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router';
+import { useStore } from '@/lib/store';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 
-import { useState } from "react";
-import { useNavigate, Link, Navigate } from "react-router-dom";
-import { fine } from "@/lib/fine";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-
-export default function SignupForm() {
+const Signup = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    name: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { register } = useStore();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (!formData.name) {
-      newErrors.name = "Name is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
-
+    
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    
     setIsLoading(true);
 
-    try {
-      const { data, error } = await fine.auth.signUp.email(
-        {
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-          callbackURL: "/",
-        },
-        {
-          onRequest: () => {
-            setIsLoading(true);
-          },
-          onSuccess: () => {
-            toast({
-              title: "Account created",
-              description: "Please check your email to verify your account.",
-            });
-            navigate("/login");
-          },
-          onError: (ctx) => {
-            toast({
-              title: "Error",
-              description: ctx.error.message,
-              variant: "destructive",
-            });
-          },
-        }
-      );
-
-      if (error) {
-        throw error;
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
+    // Simulate network delay
+    setTimeout(() => {
+      const result = register({
+        name,
+        email,
+        password,
+        role: 'cashier', // Default role for new users
       });
-    } finally {
+      
+      if (result.success) {
+        toast.success(result.message);
+        navigate('/login');
+      } else {
+        toast.error(result.message);
+      }
+      
       setIsLoading(false);
-    }
+    }, 1000);
   };
 
-  if (!fine) return <Navigate to='/' />;
-  const { isPending, data } = fine.auth.useSession();
-  if (!isPending && data) return <Navigate to='/' />;
-
   return (
-    <div className='container mx-auto flex h-screen items-center justify-center py-10'>
-      <Card className='mx-auto w-full max-w-md'>
-        <CardHeader>
-          <CardTitle className='text-2xl'>Create an account</CardTitle>
-          <CardDescription>Enter your details below to create your account</CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+          <CardDescription>Enter your information to create an account</CardDescription>
         </CardHeader>
+        
         <form onSubmit={handleSubmit}>
-          <CardContent className='space-y-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='name'>Name</Label>
-              <Input
-                id='name'
-                name='name'
-                placeholder='John Doe'
-                value={formData.name}
-                onChange={handleChange}
-                disabled={isLoading}
-                aria-invalid={!!errors.name}
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input 
+                id="name" 
+                placeholder="John Doe" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
-              {errors.name && <p className='text-sm text-destructive'>{errors.name}</p>}
             </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                id='email'
-                name='email'
-                type='email'
-                placeholder='john@example.com'
-                value={formData.email}
-                onChange={handleChange}
-                disabled={isLoading}
-                aria-invalid={!!errors.email}
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="name@example.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
-              {errors.email && <p className='text-sm text-destructive'>{errors.email}</p>}
             </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='password'>Password</Label>
-              <Input
-                id='password'
-                name='password'
-                type='password'
-                value={formData.password}
-                onChange={handleChange}
-                disabled={isLoading}
-                aria-invalid={!!errors.password}
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
-              {errors.password && <p className='text-sm text-destructive'>{errors.password}</p>}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input 
+                id="confirmPassword" 
+                type="password" 
+                placeholder="••••••••" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
             </div>
           </CardContent>
-
-          <CardFooter className='flex flex-col space-y-4'>
-            <Button type='submit' className='w-full' disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                  Creating account...
-                </>
-              ) : (
-                "Sign up"
-              )}
+          
+          <CardFooter className="flex flex-col space-y-4">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating account..." : "Create account"}
             </Button>
-
-            <p className='text-center text-sm text-muted-foreground'>
+            
+            <div className="text-center text-sm">
               Already have an account?{" "}
-              <Link to='/login' className='text-primary underline underline-offset-4 hover:text-primary/90'>
+              <Link to="/login" className="text-primary hover:underline">
                 Sign in
               </Link>
-            </p>
+            </div>
           </CardFooter>
         </form>
       </Card>
     </div>
   );
-}
+};
+
+export default Signup;

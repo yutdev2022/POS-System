@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  password: string; // In a real app, this would be hashed
+  role: 'admin' | 'cashier';
+  createdAt: Date;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -22,6 +31,8 @@ export type Transaction = {
   timestamp: Date;
   totalAmount: number;
   paymentMethod: string;
+  cashierId: string;
+  cashierName: string;
   items: Array<{
     productId: string;
     productName: string;
@@ -34,6 +45,16 @@ type POSState = {
   products: Product[];
   cart: CartItem[];
   transactions: Transaction[];
+  users: User[];
+  currentUser: User | null;
+  
+  // User actions
+  login: (email: string, password: string) => { success: boolean; message: string };
+  logout: () => void;
+  register: (user: Omit<User, 'id' | 'createdAt'>) => { success: boolean; message: string };
+  addUser: (user: User) => void;
+  updateUser: (user: User) => void;
+  deleteUser: (userId: string) => void;
   
   // Product actions
   addProduct: (product: Product) => void;
@@ -107,6 +128,83 @@ export const useStore = create<POSState>()(
       ],
       cart: [],
       transactions: [],
+      users: [
+        {
+          id: 'admin-1',
+          name: 'Admin User',
+          email: 'admin@example.com',
+          password: 'admin123', // In a real app, this would be hashed
+          role: 'admin',
+          createdAt: new Date(),
+        },
+        {
+          id: 'cashier-1',
+          name: 'Cashier User',
+          email: 'cashier@example.com',
+          password: 'cashier123', // In a real app, this would be hashed
+          role: 'cashier',
+          createdAt: new Date(),
+        },
+      ],
+      currentUser: null,
+      
+      login: (email, password) => {
+        const user = get().users.find(
+          (u) => u.email === email && u.password === password
+        );
+        
+        if (user) {
+          set({ currentUser: user });
+          return { success: true, message: 'Login successful' };
+        }
+        
+        return { success: false, message: 'Invalid email or password' };
+      },
+      
+      logout: () => {
+        set({ currentUser: null });
+      },
+      
+      register: (userData) => {
+        const { users } = get();
+        
+        // Check if email already exists
+        if (users.some((user) => user.email === userData.email)) {
+          return { success: false, message: 'Email already in use' };
+        }
+        
+        const newUser: User = {
+          ...userData,
+          id: `user-${Date.now()}`,
+          createdAt: new Date(),
+        };
+        
+        set({ users: [...users, newUser] });
+        return { success: true, message: 'Registration successful' };
+      },
+      
+      addUser: (user) => {
+        set((state) => ({ users: [...state.users, user] }));
+      },
+      
+      updateUser: (updatedUser) => {
+        set((state) => ({
+          users: state.users.map((user) =>
+            user.id === updatedUser.id ? updatedUser : user
+          ),
+          // Update currentUser if it's the same user
+          currentUser:
+            state.currentUser?.id === updatedUser.id
+              ? updatedUser
+              : state.currentUser,
+        }));
+      },
+      
+      deleteUser: (userId) => {
+        set((state) => ({
+          users: state.users.filter((user) => user.id !== userId),
+        }));
+      },
       
       addProduct: (product) => 
         set((state) => ({ 
@@ -161,9 +259,9 @@ export const useStore = create<POSState>()(
       clearCart: () => set({ cart: [] }),
       
       completeTransaction: (paymentMethod) => {
-        const { cart, transactions } = get();
+        const { cart, transactions, currentUser } = get();
         
-        if (cart.length === 0) return;
+        if (cart.length === 0 || !currentUser) return;
         
         const totalAmount = cart.reduce(
           (sum, item) => sum + item.product.price * item.quantity, 
@@ -175,6 +273,8 @@ export const useStore = create<POSState>()(
           timestamp: new Date(),
           totalAmount,
           paymentMethod,
+          cashierId: currentUser.id,
+          cashierName: currentUser.name,
           items: cart.map(item => ({
             productId: item.product.id,
             productName: item.product.name,

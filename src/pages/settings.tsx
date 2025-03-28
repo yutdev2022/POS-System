@@ -1,22 +1,159 @@
-import { Layout } from "@/components/layout/Layout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { useStore } from "@/lib/store";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 const Settings = () => {
-  const handleSave = () => {
+  const { currentUser, updateUser } = useStore();
+  const [name, setName] = useState(currentUser?.name || "");
+  const [email, setEmail] = useState(currentUser?.email || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  const handleSaveSettings = () => {
     toast.success("Settings saved successfully");
   };
   
+  const handleUpdateProfile = () => {
+    if (!currentUser) return;
+    
+    if (!name || !email) {
+      toast.error("Name and email are required");
+      return;
+    }
+    
+    updateUser({
+      ...currentUser,
+      name,
+      email,
+    });
+    
+    toast.success("Profile updated successfully");
+  };
+  
+  const handleChangePassword = () => {
+    if (!currentUser) return;
+    
+    if (!currentPassword) {
+      toast.error("Current password is required");
+      return;
+    }
+    
+    if (currentPassword !== currentUser.password) {
+      toast.error("Current password is incorrect");
+      return;
+    }
+    
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    
+    updateUser({
+      ...currentUser,
+      password: newPassword,
+    });
+    
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    
+    toast.success("Password changed successfully");
+  };
+  
   return (
-    <Layout>
+    <AuthLayout>
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Settings</h1>
         
         <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+              <CardDescription>
+                Update your personal information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input 
+                  id="name" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleUpdateProfile}>Update Profile</Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Change Password</CardTitle>
+              <CardDescription>
+                Update your password
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <Input 
+                  id="currentPassword" 
+                  type="password" 
+                  value={currentPassword} 
+                  onChange={(e) => setCurrentPassword(e.target.value)} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input 
+                  id="newPassword" 
+                  type="password" 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input 
+                  id="confirmPassword" 
+                  type="password" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)} 
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleChangePassword}>Change Password</Button>
+            </CardFooter>
+          </Card>
+          
           <Card>
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
@@ -65,43 +202,13 @@ const Settings = () => {
                 <Switch id="sales-summary" defaultChecked />
               </div>
             </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Receipt Settings</CardTitle>
-              <CardDescription>
-                Configure how receipts are generated
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="print-receipt">Auto-Print Receipts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically print receipts after each sale
-                  </p>
-                </div>
-                <Switch id="print-receipt" />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="email-receipt">Email Receipts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Send receipts via email when available
-                  </p>
-                </div>
-                <Switch id="email-receipt" />
-              </div>
-            </CardContent>
             <CardFooter>
-              <Button onClick={handleSave}>Save Settings</Button>
+              <Button onClick={handleSaveSettings}>Save Settings</Button>
             </CardFooter>
           </Card>
         </div>
       </div>
-    </Layout>
+    </AuthLayout>
   );
 };
 

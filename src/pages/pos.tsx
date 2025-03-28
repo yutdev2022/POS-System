@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Layout } from "@/components/layout/Layout";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Minus, Plus, Search, ShoppingCart, Trash2, X, Package } from "lucide-react";
+import { Minus, Plus, Search, ShoppingCart, Trash2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -40,7 +40,7 @@ const POS = () => {
   };
   
   return (
-    <Layout>
+    <AuthLayout>
       <div className="h-full flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Point of Sale</h1>
@@ -306,7 +306,7 @@ const POS = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+    </AuthLayout>
   );
 };
 
